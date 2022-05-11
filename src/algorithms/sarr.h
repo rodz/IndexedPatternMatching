@@ -162,7 +162,7 @@ int searchIndexLine(string &txt, vector<string> &pats, vector<int> &sarr) {
   return ans;
 }
 
-int searchIndexFile(string index_file_name, vector<string> pats) {
+int searchIndexFile(string index_file_name, vector<string> pats, bool only_count) {
   ifstream* index_file = new ifstream();
   index_file->open(index_file_name);
   if(!index_file->is_open()){
@@ -191,7 +191,7 @@ int searchIndexFile(string index_file_name, vector<string> pats) {
     }
     int oc = searchIndexLine(txt, pats, sarr);
     ans += oc;
-    if (oc) {
+    if (oc && !only_count) {
       cout << index_file_name << " " << line_count << " " << txt <<endl;
     }
   }

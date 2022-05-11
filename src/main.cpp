@@ -75,12 +75,6 @@ int parse_args(int argc, char* argv[]) {
     }
     generateIndexFile(file_name);
   }else if (command == "search") {
-    if(ind < argc) {
-      file_name = string(argv[ind++]);
-    }else {
-      help = true;
-      return -1;
-    }
     if(pattern_file_path.size() > 0) {
       string pattern;
       ifstream* pattern_file = new ifstream();
@@ -101,7 +95,15 @@ int parse_args(int argc, char* argv[]) {
       help = true;
       return -1;
     }
-    int occ = searchIndexFile(file_name, pattern_list);
+
+    if(ind < argc) {
+      file_name = string(argv[ind++]);
+    }else {
+      help = true;
+      return -1;
+    }
+
+    int occ = searchIndexFile(file_name, pattern_list, only_count);
     cout<< "Total occurrences: " << occ <<endl;
     return 0;
   } else {
@@ -118,7 +120,7 @@ int main(int argc, char* argv[]) {
     cout<<"Usage: ipmt [command] [options]"<<endl;
     cout<<"Command:"<<endl;
     cout<<"  index TEXT_FILE               Generated an index file based on the first file, the index will contain a copy of the original file and the sufix array"<<endl;
-    cout<<"  search INDEX_FILE PATTERN     Given an index file and a pattern will return the list of occurencies of this patten on the file text"<<endl;
+    cout<<"  search PATTERN INDEX_FILE     Given an index file and a pattern will return the list of occurencies of this patten on the file text"<<endl;
     cout<<"Options:"<<endl;
     cout<<"  -p, --pattern PATTERN_FILE    Grabs multiple patterns at once from a file, when this option is passed, the pattern parameter should not be passed."<<endl;
     cout<<"  -c, --count                   Hides the line results and displays only the total number of occurences"<<endl;
