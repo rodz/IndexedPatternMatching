@@ -150,6 +150,12 @@ void generateIndexFile(string file_name) {
   }
   output_file->close();
   txt_file->close();
+  int original_file_size = std::__fs::filesystem::file_size(file_name);
+  int index_file_size = std::__fs::filesystem::file_size(output_file_name);
+  printf("%s (%u bytes) file indexed as %s (%u bytes)\n",
+    file_name.c_str(), original_file_size,
+    output_file_name.c_str(), index_file_size
+  );
 }
 
 int searchIndexLine(string &txt, vector<string> &pats, vector<int> &sarr) {

@@ -124,22 +124,14 @@ void encodeFile(string &file_path) {
         vector<string> cur = encodeLine(line);
         *output_file << cur[0] << '\n' << cur[1] << '\n';
     }
+    int original_file_size = std::__fs::filesystem::file_size(file_path);
+    int compressed_file_size = std::__fs::filesystem::file_size(output_file_path);
+    printf("%s (%u bytes) file compressed as %s (%u bytes)\n",
+        file_path.c_str(), original_file_size,
+        output_file_path.c_str(), compressed_file_size
+    );
 }
 
 void decodeFile(string &file_path) {
-    string output_file_path = file_path + ".myzip";
-    string line;
-    ifstream* txt_file = new ifstream();
-    ofstream* output_file = new ofstream();
-    txt_file->open(file_path);
-    output_file->open(output_file_path);
 
-    while(!txt_file->eof()) {
-        getline(*txt_file, line);
-        if (line.empty()) {
-            continue;
-        }
-        vector<string> cur = encodeLine(line);
-        *output_file << cur[0] << '\n' << cur[1] << '\n';
-    }
 }
