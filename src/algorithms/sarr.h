@@ -44,7 +44,7 @@ vector<vector<int>> build_pos(string &txt) {
   vector<int> cur_pos = sort_letters(txt);
   pos.push_back(cur_pos);
 
-  while(cur_pot < n) {
+  while(cur_pot <= n) {
     vector<pair<pii, int>> next_val;
     for(int i = 0; i<n; i++) {
       int next_pos = i + cur_pot;
@@ -121,9 +121,9 @@ void generateIndexFile(string file_name) {
   string output_file_name = file_name + ".idx";
   ifstream* txt_file = new ifstream();
   ofstream* output_file = new ofstream();
-  cout<<output_file_name<<endl;
   txt_file->open(file_name);
   output_file->open(output_file_name);
+  std::ios_base::sync_with_stdio(false);
   
   if(!txt_file->is_open()){
     cerr << "Text file were unable to be opened" << endl;
@@ -138,15 +138,15 @@ void generateIndexFile(string file_name) {
     getline(*txt_file, line);
     vector<vector<int>> pos = build_pos(line);
     vector<int> sarr = build_sarr(pos[pos.size()-1]);
-    *output_file << sarr.size() << endl;
-    *output_file << line << endl;
+    *output_file << sarr.size() << '\n';
+    *output_file << line << '\n';
     for (int i = 0; i<sarr.size(); i++) {
       if(i != 0){
         *output_file << ' ';
       }
       *output_file << sarr[i];
     }
-    *output_file << endl;
+    *output_file << '\n';
   }
   output_file->close();
   txt_file->close();

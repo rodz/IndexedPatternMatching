@@ -1,5 +1,7 @@
 #include <iostream>
 #include <cstdlib>
+#include <sstream>
+#include <fstream>
 #include <vector>
 #include <queue>
 #include <map>
@@ -14,11 +16,11 @@ int ascii = 256;
 struct Node
 {
     string data;
-    unsigned freq;
+    int freq;
 
     Node *left, *right;
 
-    Node(string data, unsigned freq)
+    Node(string data, unsigned int freq)
     {
         this->data = data;
         this->freq = freq;
@@ -38,7 +40,7 @@ struct lt
     }
 };
 
-void Huffman(string data, map<char, int> freq)
+Node* Huffman(string& data, map<char, int>& freq)
 {
     int size = sizeof(data);
     struct Node *left, *right, *top, *root;
@@ -49,9 +51,9 @@ void Huffman(string data, map<char, int> freq)
     int f;
 
     // one node per letter
-    for (auto entry : freq)
+    for (pair<char, int> entry : freq)
     {
-        string c = entry.first + ""; // cast to string
+        string c = string(1, entry.first); // cast to string
         int freq_c = entry.second;
         tree.push(new Node(c, freq_c));
     }
@@ -75,9 +77,10 @@ void Huffman(string data, map<char, int> freq)
 
     root = tree.top();
     tree.pop();
+    return root;
 }
 
-map<char, int> compute_freqs(string txt)
+map<char, int> compute_freqs(string& txt)
 {
     map<char, int> f_ascii;
 
@@ -94,4 +97,49 @@ void test()
     string txt = "aaa";
     map<char, int> freqs = compute_freqs(txt);
     Huffman(txt, freqs);
-};
+}
+
+vector<string> encodeLine(string &txt) {
+    map<char, int> freqs = compute_freqs(txt);
+    Node* root = Huffman(txt, freqs);
+    vector<string> ans;
+    ans.push_back(root->data);
+    ans.push_back(to_string(root->freq));
+    return ans;
+}
+
+void encodeFile(string &file_path) {
+    string output_file_path = file_path + ".myzip";
+    string line;
+    ifstream* txt_file = new ifstream();
+    ofstream* output_file = new ofstream();
+    txt_file->open(file_path);
+    output_file->open(output_file_path);
+
+    while(!txt_file->eof()) {
+        getline(*txt_file, line);
+        if (line.empty()) {
+            continue;
+        }
+        vector<string> cur = encodeLine(line);
+        *output_file << cur[0] << '\n' << cur[1] << '\n';
+    }
+}
+
+void decodeFile(string &file_path) {
+    string output_file_path = file_path + ".myzip";
+    string line;
+    ifstream* txt_file = new ifstream();
+    ofstream* output_file = new ofstream();
+    txt_file->open(file_path);
+    output_file->open(output_file_path);
+
+    while(!txt_file->eof()) {
+        getline(*txt_file, line);
+        if (line.empty()) {
+            continue;
+        }
+        vector<string> cur = encodeLine(line);
+        *output_file << cur[0] << '\n' << cur[1] << '\n';
+    }
+}

@@ -2,6 +2,7 @@
 #include <string>
 #include <getopt.h>
 #include "algorithms/sarr.h"
+#include "algorithms/huffman.h"
 #include <fstream>
 #include <set>
 #include <map>
@@ -74,7 +75,7 @@ int parse_args(int argc, char* argv[]) {
       return -1;
     }
     generateIndexFile(file_name);
-  }else if (command == "search") {
+  } else if (command == "search") {
     if(pattern_file_path.size() > 0) {
       string pattern;
       ifstream* pattern_file = new ifstream();
@@ -106,6 +107,22 @@ int parse_args(int argc, char* argv[]) {
     int occ = searchIndexFile(file_name, pattern_list, only_count);
     cout<< "Total occurrences: " << occ <<endl;
     return 0;
+  } else if(command == "zip") {
+    if(ind < argc) {
+      file_name = string(argv[ind++]);
+    }else {
+      help = true;
+      return -1;
+    }
+    encodeFile(file_name);
+  } else if(command == "unzip") {
+    if(ind < argc) {
+      file_name = string(argv[ind++]);
+    }else {
+      help = true;
+      return -1;
+    }
+    decodeFile(file_name);
   } else {
     help = true;
     return -1;
@@ -119,8 +136,10 @@ int main(int argc, char* argv[]) {
   if(help) {
     cout<<"Usage: ipmt [command] [options]"<<endl;
     cout<<"Command:"<<endl;
-    cout<<"  index TEXT_FILE               Generated an index file based on the first file, the index will contain a copy of the original file and the sufix array"<<endl;
+    cout<<"  index TEXT_FILE               Generates an index file based on the first file, the index will contain a copy of the original file and the sufix array"<<endl;
     cout<<"  search PATTERN INDEX_FILE     Given an index file and a pattern will return the list of occurencies of this patten on the file text"<<endl;
+    cout<<"  zip TEXT_FILE                 Generates a compressed .myzip file given the original file"<<endl;
+    cout<<"  unzip MYZIP_FILE              Receives a myzip file and restores it back to its original content"<<endl;
     cout<<"Options:"<<endl;
     cout<<"  -p, --pattern PATTERN_FILE    Grabs multiple patterns at once from a file, when this option is passed, the pattern parameter should not be passed."<<endl;
     cout<<"  -c, --count                   Hides the line results and displays only the total number of occurences"<<endl;
