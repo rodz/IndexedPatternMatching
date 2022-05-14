@@ -9,13 +9,11 @@
 
 using namespace std;
 
-// pra mim: quando voltar, procura por parei aqui!!
-// pra rods: o que ta dando errado-> não to conseguindo criar um heap com base em outro, não sei se é problema de ponteiro - linha 40 :()
+// pra mim: rever toda a parte de decode, fazer clear
 
 int ascii = 256;
-priority_queue<Node *, vector<Node *>, lt> baseHeap;
 
-// ---------- Structures 
+// ---------- Structures
 // Individual Node
 struct Node
 {
@@ -25,6 +23,11 @@ struct Node
 
     Node *left, *right;
 
+    Node()
+    {
+        left = right = NULL;
+    }
+
     Node(string data, unsigned int freq)
     {
         this->data = data;
@@ -33,13 +36,18 @@ struct Node
         left = right = NULL;
     }
 };
+
+priority_queue<Node *, vector<Node *>, lt> baseHeap;
+Node *root;
+
 Node *Huffman()
 {
     struct Node *left, *right, *top, *root;
 
-    priority_queue<Node *, vector<Node *>, lt> tree(baseHeap);
+    priority_queue<Node *, vector<Node *>, lt> tree = baseHeap;
 
     string n;
+
     int f;
 
     while (tree.size() > 1)
@@ -65,7 +73,6 @@ Node *Huffman()
     init_codes(root, "");
     return root;
 }
-
 
 // ---------- Utils
 // less than - comparison of two node (frequencies)
@@ -123,36 +130,94 @@ void createBaseHeap(string &file_path, vector<Node *> freqs)
         }
     }
 }
+int binToDec(string str)
+{
+    int r = 0;
+    for (auto c : str)
+    {
+        r = r * 2 + c - '0';
+    }
+    return r;
+}
 
-void recreateTree(string &file_path) {
+string decToBin(int num)
+{
+    string temp, r = "";
+    while (num > 0)
+    {
+        temp += (num % 2 + '0');
+        num /= 2;
+    }
+    r.append(8 - temp.length(), '0');
+    for (int i = temp.length() - 1; i >= 0; i--)
+    {
+        r += temp[i];
+    }
+    return r;
+}
+
+void rebuildTree(Node *root, unsigned char *c, string txt)
+{ // se der ruim é aqui pq n terminei de ajeitar
+    Node *curr = root;
+
+    for (int i = 0; i < txt.length(); i++)
+    {
+        if (txt[i] == '0')
+        {
+            if (curr->left == NULL)
+            {
+                curr->left = new Node();
+            }
+            curr = curr->left;
+        }
+        else if (txt[i] == '1')
+        {
+            if (curr->right == NULL)
+            {
+                curr->right = new Node();
+            }
+            curr = curr->right;
+        }
+    }
+    string dt(reinterpret_cast<char *>(c));
+    curr->data = dt;
+}
+
+void prepareTree(string &file_path)
+{
+    root = new Node();
     char ch, size;
 
     ifstream *txt_file = new ifstream();
     txt_file->open(file_path);
     txt_file->get(ch);
 
+    txt_file->read(reinterpret_cast<char *>(&size), 1);
 
-}
+    // next size * (1 + 16) characters contain (char)data and (string)code[in decimal]
+    for (int i = 0; i < size; i++)
+    {
+        char cod;
+        unsigned char codec[16];
+        txt_file->read(&cod, 1);
+        txt_file->read(reinterpret_cast<char *>(codec), 16);
 
-int binToDec(string str) {
-    int r = 0;
-    for (auto c : str) {
-        r = r * 2 + c - '0';
+        // converting decimal characters into their binary equivalent to obtain code
+        string codeStr = "";
+        for (int i = 0; i < 16; i++)
+        {
+            codeStr += decToBin(codec[i]);
+        }
+        // Removing padding by ignoring first (127 - curr->code.length()) '0's and next '1' character
+        int j = 0;
+        while (codec[j] == '0')
+        {
+            j++;
+        }
+        codeStr = codeStr.substr(j + 1);
+        // Adding node with aCode data and hCodeStr string to the huffman tree
+        rebuildTree(root, codec, codeStr);
     }
-    return r;
-}
-
-string decToBin(int num) {
-    string temp, r = "";
-    while (num > 0) {
-        temp += (num % 2 + '0');
-        num /= 2;
-    }
-    r.append(8 - temp.length(), '0');
-    for (int i = temp.length() - 1; i >= 0; i--) {
-        r += temp[i];
-    }
-    return r;
 }
 
 // ---- Functions
@@ -214,7 +279,7 @@ void encodeFile(string &file_path)
         txt_file->get(ch);
     }
 
-    // appends 0s until we have 8 bits 
+    // appends 0s until we have 8 bits
     int ovf = 8 - aux.length();
     if (aux.length() < 8)
     {
@@ -236,6 +301,10 @@ void encodeFile(string &file_path)
 
 void decodeFile(string &file_path)
 {
+    char count0;
+    unsigned char size, textseg;
+    vector<unsigned char> text;
+
     ifstream *txt_file = new ifstream();
     txt_file->open(file_path);
 
@@ -243,7 +312,49 @@ void decodeFile(string &file_path)
     ofstream *output_file = new ofstream();
     output_file->open(output_file_path);
 
-    recreateTree(file_path);
-    // parei aqui
-}
+    prepareTree(file_path);
 
+    txt_file->read(reinterpret_cast<char *>(&size), 1);
+    // Reading count at the end of the file which is number of bits appended to make final value 8-bit
+    txt_file->seekg(-1, ios::end);
+    txt_file->read(&count0, 1);
+    // Ignoring the meta data (huffman tree) (1 + 17 * size) and reading remaining file
+    txt_file->seekg(1 + 17 * size, ios::beg);
+
+    txt_file->read(reinterpret_cast<char *>(&textseg), 1);
+    while (!txt_file->eof())
+    {
+        text.push_back(textseg);
+        txt_file->read(reinterpret_cast<char *>(&textseg), 1);
+    }
+
+    Node *curr = root;
+    string path;
+    for (int i = 0; i < text.size() - 1; i++)
+    {
+        // Converting decimal number to its equivalent 8-bit binary code
+        path = decToBin(text[i]);
+        if (i == text.size() - 2)
+        {
+            path = path.substr(0, 8 - count0);
+        }
+        // Traversing huffman tree and appending resultant data to the file
+        for (int j = 0; j < path.size(); j++)
+        {
+            if (path[j] == '0')
+            {
+                curr = curr->left;
+            }
+            else
+            {
+                curr = curr->right;
+            }
+
+            if (curr->left == NULL && curr->right == NULL)
+            { // Found leaf
+                *output_file << curr->data;
+                curr = root;
+            }
+        }
+    }
+}
