@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <sstream>
 #include <fstream>
+#include <string>
 #include <vector>
 #include <queue>
 #include <map>
@@ -9,6 +10,7 @@
 using namespace std;
 
 int ascii = 256;
+map<string, string> codes;
 
 // Falta -> imprimir a árvore e gerar o arquivo e fazer o decode
 
@@ -30,7 +32,6 @@ struct Node
 };
 
 // less than - comparison of two node (frequencies)
-
 struct lt
 {
     bool operator()(Node *n1, Node *n2)
@@ -44,6 +45,7 @@ Node* Huffman(string& data, map<char, int>& freq)
 {
     int size = sizeof(data);
     struct Node *left, *right, *top, *root;
+    
 
     priority_queue<Node *, vector<Node *>, lt> tree;
 
@@ -77,7 +79,20 @@ Node* Huffman(string& data, map<char, int>& freq)
 
     root = tree.top();
     tree.pop();
+
+    codes.clear();
+    init_codes(root,"");
     return root;
+}
+
+void init_codes(struct Node* root, string line)
+{
+    if (root->left == NULL) // leaf
+        codes[root->data]=line;
+        return;        
+
+    init_codes(root->left, line + "0");
+    init_codes(root->right, line + "1");
 }
 
 map<char, int> compute_freqs(string& txt)
@@ -92,19 +107,15 @@ map<char, int> compute_freqs(string& txt)
     return f_ascii;
 }
 
-void test()
-{
-    string txt = "aaa";
-    map<char, int> freqs = compute_freqs(txt);
-    Huffman(txt, freqs);
-}
+string encodeLine(string &txt) { // tem que passar isso pra bytes (o output)
 
-vector<string> encodeLine(string &txt) {
     map<char, int> freqs = compute_freqs(txt);
     Node* root = Huffman(txt, freqs);
-    vector<string> ans;
-    ans.push_back(root->data);
-    ans.push_back(to_string(root->freq));
+    string ans;
+
+    for (auto i: txt)
+        ans += codes[to_string(i)];
+
     return ans;
 }
 
@@ -121,9 +132,10 @@ void encodeFile(string &file_path) {
         if (line.empty()) {
             continue;
         }
-        vector<string> cur = encodeLine(line);
-        *output_file << cur[0] << '\n' << cur[1] << '\n';
+        string cur = encodeLine(line); // tem que codificar árvore pra salvar no arquivo
+        *output_file << cur << '\n';
     }
+
     int original_file_size = std::__fs::filesystem::file_size(file_path);
     int compressed_file_size = std::__fs::filesystem::file_size(output_file_path);
     printf("%s (%u bytes) file compressed as %s (%u bytes)\n",
@@ -132,6 +144,35 @@ void encodeFile(string &file_path) {
     );
 }
 
-void decodeFile(string &file_path) {
+string decodeLine(string &line){ // receber em bytes e retornar string
 
+// reconstruir árvore
+
+}
+
+void decodeFile(string &file_path) {
+    size_t pos = file_path.find(".myzip");
+    string output_file_path = file_path.substr(0,pos);
+    
+    string line, cur;
+    ifstream* txt_file = new ifstream();
+    ofstream* output_file = new ofstream();
+
+    txt_file->open(file_path);
+    output_file->open(output_file_path);
+
+    while(!txt_file->eof()) {
+        getline(*txt_file, line);
+
+        cur = decodeLine(line);
+
+        *output_file << cur << '\n';
+    }    
+    
+}
+void test()
+{
+    string txt = "aaa";
+    map<char, int> freqs = compute_freqs(txt);
+    Huffman(txt, freqs);
 }
