@@ -37,6 +37,29 @@ struct Node
     }
 };
 
+// ---------- Utils
+// less than - comparison of two node (frequencies)
+struct lt
+{
+    bool operator()(Node *n1, Node *n2)
+
+    {
+        return ((n1->freq) > (n2->freq));
+    }
+};
+
+void init_codes(struct Node *root, string codeline)
+{
+    if (root->left == NULL) // leaf
+    {
+        root->code = codeline;
+        return;
+    }
+
+    init_codes(root->left, codeline + "0");
+    init_codes(root->right, codeline + "1");
+}
+
 priority_queue<Node *, vector<Node *>, lt> baseHeap;
 Node *root;
 
@@ -74,29 +97,6 @@ Node *Huffman()
     return root;
 }
 
-// ---------- Utils
-// less than - comparison of two node (frequencies)
-struct lt
-{
-    bool operator()(Node *n1, Node *n2)
-
-    {
-        return ((n1->freq) > (n2->freq));
-    }
-};
-
-void init_codes(struct Node *root, string codeline)
-{
-    if (root->left == NULL) // leaf
-    {
-        root->code = codeline;
-        return;
-    }
-
-    init_codes(root->left, codeline + "0");
-    init_codes(root->right, codeline + "1");
-}
-
 vector<Node *> baseFreq()
 {
     vector<Node *> base;
@@ -108,18 +108,11 @@ vector<Node *> baseFreq()
     return base;
 }
 
-void createBaseHeap(string &file_path, vector<Node *> freqs)
+void createBaseHeap(string line, string &file_path, vector<Node *> freqs)
 {
-    char ch;
 
-    ifstream *txt_file = new ifstream();
-    txt_file->open(file_path);
-    txt_file->get(ch);
-
-    while (!txt_file->eof())
-    {
-        freqs[ch]->freq++;
-        txt_file->get(ch);
+    for(char c: line) {
+        freqs[c]->freq++;
     }
 
     for (int i = 0; i < ascii; i++)
@@ -130,30 +123,13 @@ void createBaseHeap(string &file_path, vector<Node *> freqs)
         }
     }
 }
-int binToDec(string str)
-{
-    int r = 0;
-    for (auto c : str)
-    {
-        r = r * 2 + c - '0';
-    }
-    return r;
+
+int binToDec(string& str) {
+    return bitset<8>(str).to_ulong();
 }
 
-string decToBin(int num)
-{
-    string temp, r = "";
-    while (num > 0)
-    {
-        temp += (num % 2 + '0');
-        num /= 2;
-    }
-    r.append(8 - temp.length(), '0');
-    for (int i = temp.length() - 1; i >= 0; i--)
-    {
-        r += temp[i];
-    }
-    return r;
+string decToBin(int num) {
+  return bitset<8>(num).to_string();
 }
 
 void rebuildTree(Node *root, unsigned char *c, string txt)

@@ -9,7 +9,7 @@
 
 using namespace std;
 
-int ascii = 256;
+int ascii = 255;
 map<string, string> codes;
 
 // Falta -> imprimir a árvore e gerar o arquivo e fazer o decode
@@ -29,6 +29,17 @@ struct Node
 
         left = right = NULL;
     }
+
+    void print_node(int level)
+    {
+        if (this->left == NULL) {
+            cout<<string(level, ' ')<<this->data<<' '<<this->freq<<endl;
+            return;
+        }
+        this->left->print_node(level+1);
+        cout<<string(level, ' ')<<this->data<<' '<<this->freq<<endl;
+        this->right->print_node(level+1);
+    }
 };
 
 // less than - comparison of two node (frequencies)
@@ -41,16 +52,22 @@ struct lt
     }
 };
 
-Node* Huffman(string& data, map<char, int>& freq)
+void init_codes(struct Node* root, string line)
 {
-    int size = sizeof(data);
+    if (root->left == NULL) { // leaf
+        codes[root->data]=line;
+        return; 
+    }
+
+    init_codes(root->left, line + "0");
+    init_codes(root->right, line + "1");
+}
+
+Node* Huffman(map<unsigned char, int>& freq)
+{
     struct Node *left, *right, *top, *root;
     
-
     priority_queue<Node *, vector<Node *>, lt> tree;
-
-    string n;
-    int f;
 
     // one node per letter
     for (pair<char, int> entry : freq)
@@ -67,8 +84,8 @@ Node* Huffman(string& data, map<char, int>& freq)
         right = tree.top();
         tree.pop();
 
-        n = left->data + right->data;
-        f = left->freq + right->freq;
+        string n = left->data + right->data;
+        int f = left->freq + right->freq;
 
         top = new Node(n, f);
         top->left = left;
@@ -85,21 +102,15 @@ Node* Huffman(string& data, map<char, int>& freq)
     return root;
 }
 
-void init_codes(struct Node* root, string line)
+map<unsigned char, int> compute_freqs(string& txt)
 {
-    if (root->left == NULL) // leaf
-        codes[root->data]=line;
-        return;        
+    map<unsigned char, int> f_ascii;
 
-    init_codes(root->left, line + "0");
-    init_codes(root->right, line + "1");
-}
+    for (unsigned char i = 0; i < ascii; i++) {
+        f_ascii[i] = 0;
+    }
 
-map<char, int> compute_freqs(string& txt)
-{
-    map<char, int> f_ascii;
-
-    for (char c : txt)
+    for (unsigned char c : txt)
     {
         f_ascii[c] += 1;
     }
@@ -109,12 +120,15 @@ map<char, int> compute_freqs(string& txt)
 
 string encodeLine(string &txt) { // tem que passar isso pra bytes (o output)
 
-    map<char, int> freqs = compute_freqs(txt);
-    Node* root = Huffman(txt, freqs);
-    string ans;
+    map<unsigned char, int> freqs = compute_freqs(txt);
+    Node* root = Huffman(freqs);
+    string ans = "";
 
-    for (auto i: txt)
-        ans += codes[to_string(i)];
+    for (unsigned char i: txt){
+        string cur_i = string(1, i);
+        cout<<cur_i<<' '<<codes[cur_i]<<endl;
+        ans += codes[cur_i];
+    }
 
     return ans;
 }
@@ -170,9 +184,14 @@ void decodeFile(string &file_path) {
     }    
     
 }
-void test()
+
+int test()
 {
-    string txt = "aaa";
-    map<char, int> freqs = compute_freqs(txt);
-    Huffman(txt, freqs);
+    string txt = "abracadabra";
+    map<unsigned char, int> freqs = compute_freqs(txt);
+    Node* root = Huffman(freqs);
+    root->print_node(0);
+    for(auto x: codes) {
+        cout<<x.first<<' '<<x.second<<endl;
+    }
 }
