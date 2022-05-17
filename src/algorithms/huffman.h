@@ -7,13 +7,16 @@
 #include <queue>
 #include <map>
 #include <algorithm>
+#include <bitset>
 
 using namespace std;
+
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem ;
 
 int ascii = 255;
 map<string, string> codes;
 
-// Falta -> imprimir a árvore e gerar o arquivo e fazer o decode
 
 // Individual Node
 struct Node
@@ -51,6 +54,7 @@ struct Node
     }
 };
 
+
 // less than - comparison of two node (frequencies)
 struct lt
 {
@@ -61,6 +65,7 @@ struct lt
     }
 };
 
+// creates codes
 void init_codes(struct Node* root, string line)
 {
     if (root->left == NULL) { // leaf
@@ -159,7 +164,7 @@ map<unsigned char, int> compute_freqs(string& file_path)
 }
 
 void encodeFile(string &file_path) {
-    string output_file_path = file_path + ".myzip";
+    string output_file_path = file_path + ".myz";
     string line;
 
     // Create tree
@@ -222,8 +227,9 @@ void encodeFile(string &file_path) {
     unsigned char value = bitset<8>(cur_insert).to_ulong();
     output_file->write(reinterpret_cast<char*>(&value), 1);
 
-    int original_file_size = std::__fs::filesystem::file_size(file_path);
-    int compressed_file_size = std::__fs::filesystem::file_size(output_file_path);
+
+    int original_file_size = fs::file_size(file_path);
+    int compressed_file_size = fs::file_size(output_file_path);
     printf("%s (%u bytes) file compressed as %s (%u bytes)\n",
         file_path.c_str(), original_file_size,
         output_file_path.c_str(), compressed_file_size
@@ -289,8 +295,8 @@ void decodeFile(string &file_path) {
         *output_file << write_out;
     }
 
-    int original_file_size = std::__fs::filesystem::file_size(file_path);
-    int compressed_file_size = std::__fs::filesystem::file_size(output_file_path);
+    int original_file_size = fs::file_size(file_path);
+    int compressed_file_size = fs::file_size(output_file_path);
     printf("%s (%u bytes) file decompressed as %s (%u bytes)\n",
         file_path.c_str(), original_file_size,
         output_file_path.c_str(), compressed_file_size

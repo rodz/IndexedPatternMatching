@@ -6,6 +6,7 @@
 #include <map>
 #include <queue>
 #include <vector>
+#include <bitset>
 
 using namespace std;
 

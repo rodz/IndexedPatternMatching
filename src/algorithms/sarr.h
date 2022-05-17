@@ -8,10 +8,15 @@
 #include <map>
 #include <set>
 #include <utility>
+#include <algorithm>
+#include <filesystem>
 
 #define pii pair<int,int>
 
 using namespace std;
+
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem ;
 
 string text;
 
@@ -150,8 +155,8 @@ void generateIndexFile(string file_name) {
   }
   output_file->close();
   txt_file->close();
-  int original_file_size = std::__fs::filesystem::file_size(file_name);
-  int index_file_size = std::__fs::filesystem::file_size(output_file_name);
+  int original_file_size = fs::file_size(file_name);
+  int index_file_size = fs::file_size(output_file_name);
   printf("%s (%u bytes) file indexed as %s (%u bytes)\n",
     file_name.c_str(), original_file_size,
     output_file_name.c_str(), index_file_size
