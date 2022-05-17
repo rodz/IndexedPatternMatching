@@ -146,38 +146,16 @@ map<unsigned char, int> compute_freqs(string& file_path)
 
     while(!txt_file->eof()) {
         getline(*txt_file, line);
-        if (line.empty()) {
-            continue;
-        }
         
         for (unsigned char c : line){
             f_ascii[c] += 1;
         }
+
+        // The end line at the end should also be counted
         f_ascii['\n'] += 1;
     }
     txt_file->close();
     return f_ascii;
-}
-
-map<string, string> clean_codes(map<string, string> &code_map) {
-    map<string, string> new_codes;
-    int max_size = 0;
-    for(auto x: code_map) {
-        if (x.first.length() > 1) {
-            continue;
-        }
-        int cur_zeros = 0;
-        max_size = max(max_size, (int) x.second.length());
-    }
-    // Chop zeros
-    for(auto x: code_map) {
-        if (x.first.length() > 1) {
-            continue;
-        }
-        new_codes[x.first] = x.second + string(max_size - x.second.length(), '0');
-    }
-
-    return new_codes;
 }
 
 void encodeFile(string &file_path) {
@@ -206,10 +184,14 @@ void encodeFile(string &file_path) {
         }
         unsigned char cur_char_code = cur_char[0];
         unsigned char cur_code_sz = (unsigned char) code.second.length();
+        // Char value
         output_file->write(reinterpret_cast<char*>(&cur_char_code), 1);
+        // Size of path code
         output_file->write(reinterpret_cast<char*>(&cur_code_sz), 1);
         string upt_code = string(cur_code_sz%8? 8 - (cur_code_sz%8) : 0, '0') + code.second;
         // cout<<cur_char_code<<' '<<int(cur_code_sz)<<' '<<code.second<<endl;
+
+        // Path code divided on blocks of 8
         for(int i = 0; i<upt_code.length(); i+=8) {
             string cur_code = upt_code.substr(i, 8);
             unsigned char cur_code_bt = stoi(cur_code, nullptr, 2);
@@ -217,13 +199,13 @@ void encodeFile(string &file_path) {
         }
     }
 
-    // Encode file line by line
+    // Encode file line by line, char by char
     string cur_insert = "";
     string to_insert = "";
     while(!txt_file->eof()) {
         getline(*txt_file, line);
-
         line += '\n';
+        
         for (unsigned char i: line){
             string cur_i = string(1, i);
             string value = codes[cur_i];
@@ -263,12 +245,16 @@ void decodeFile(string &file_path) {
     unsigned char tree_size;
     map<unsigned char, string> char_to_code;
 
+    // Read qt chars
     txt_file->read(reinterpret_cast<char*>(&tree_size), 1);
     for (int i = 0; i<tree_size; i++) {
         unsigned char char_key, path_size, path_value;
+        // Read char value
         txt_file->read(reinterpret_cast<char*>(&char_key), 1);
+        // Read path size
         txt_file->read(reinterpret_cast<char*>(&path_size), 1);
         string path_str = "";
+        // Read path in blocks of 8
         for(int i = 0; i<path_size; i+=8) {
             txt_file->read(reinterpret_cast<char*>(&path_value), 1);
             string cur_path_str = bitset<8>(path_value).to_string();
@@ -279,8 +265,10 @@ void decodeFile(string &file_path) {
         char_to_code[char_key] = path_str;
     }
 
+    // Given the paths we can now recreate the original huffman encode tree
     Node* root = fromCodesToTree(char_to_code);
     Node* cur_node = root;
+    // Read file in blocks of 8 chars each
     while (!txt_file->eof()) {
         unsigned char text_bin;
         string write_out = "";
