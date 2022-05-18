@@ -16,6 +16,8 @@ To compile just run the following command:
 
 `make ipmt`
 
+Obs: The option `-lstdc++fs` was added to prevent compilation files on Linux operating systems. If running in other environments, we recommend it to be removed.
+
 # How to run
 
 By running the previous command a `ipmt` binary file will be included in the `/bin/` folder and can be executen by running `./bin/ipmt` or can be added directly to the PATH variable and executed everywhere.
