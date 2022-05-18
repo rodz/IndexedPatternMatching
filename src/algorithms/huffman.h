@@ -68,7 +68,8 @@ struct lt
 // creates codes
 void init_codes(struct Node* root, string line)
 {
-    if (root->left == NULL) { // leaf
+    if (root->left == NULL) { // found leaf
+
         codes[root->data]=line;
         return; 
     }
@@ -119,7 +120,7 @@ Node* Huffman(map<unsigned char, int>& freq)
 
     while (tree.size() > 1)
     {
-        left = tree.top(); // nera so fazer left = tree.pop ?
+        left = tree.top();
         tree.pop();
         right = tree.top();
         tree.pop();
@@ -190,8 +191,10 @@ void encodeFile(string &file_path) {
         }
         unsigned char cur_char_code = cur_char[0];
         unsigned char cur_code_sz = (unsigned char) code.second.length();
+
         // Char value
         output_file->write(reinterpret_cast<char*>(&cur_char_code), 1);
+        
         // Size of path code
         output_file->write(reinterpret_cast<char*>(&cur_code_sz), 1);
         string upt_code = string(cur_code_sz%8? 8 - (cur_code_sz%8) : 0, '0') + code.second;
