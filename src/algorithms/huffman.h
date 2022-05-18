@@ -165,6 +165,7 @@ map<unsigned char, int> compute_freqs(string& file_path)
 
 void encodeFile(string &file_path) {
     string output_file_path = file_path + ".myz";
+
     string line;
 
     // Create tree
@@ -239,7 +240,8 @@ void encodeFile(string &file_path) {
 }
 
 void decodeFile(string &file_path) {
-    string output_file_path = file_path + ".myzipdecoded";
+    string output_file_path = file_path.substr(0, file_path.size() - 4); // Removes .myz
+    output_file_path += ".unzip";
     string line;
 
     ifstream* txt_file = new ifstream();
